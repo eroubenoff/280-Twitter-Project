@@ -17,3 +17,10 @@ You will need to split the big hydrated tweet files into more memory-manageable 
 python 01_split_file.py [filename]
 ```
 for each file.
+
+# 2: Import to Mongodb.
+This requires minimal setup.  [Install Mongodb](https://docs.mongodb.com/manual/administration/install-community/) and make sure it is listening on the default port 27017.  There is no need to create an initial database.  Since this can take a while the main call is commented in the file.  Make sure to uncomment when you're ready to run.
+```
+python 02_store_to_db.py
+```
+h/t to Tushar Chandra for this script.

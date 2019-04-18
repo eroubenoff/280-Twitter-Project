@@ -5,7 +5,7 @@ operations on the database. Use this as a utilities file, modify the __main__
 block, and run when necessary.
 
 This script assumes:
- - JSON files are stored in ./hydrated_tweets_smaller/
+ - JSON files are stored in ./tweets_split/
  - MongoDB is listening on localhost/27017
  - The database of interest is called "twitter"
 """
@@ -95,7 +95,13 @@ if __name__ == "__main__":
     # Connect to database
     client = pymongo.MongoClient("localhost", 27017)
 
-    store_tweets(client)
+    # UNCOMMENT THE BELOW LINE TO RUN THE SCRIPT.
+
+    # store_tweets(client)
+    """ 
+    The remaining lines are an artifact of Tushar's script.
+
     copy_sample(client, "tweets_filtered", "tweets_small", 10000)
     count_distinct(client, "tweets")
     count_distinct(client, "tweets_filtered")
+    """
