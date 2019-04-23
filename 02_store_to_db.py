@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     # UNCOMMENT THE BELOW LINE TO RUN THE SCRIPT.
 
-    # store_tweets(client)
+    store_tweets(client)
     """ 
     The remaining lines are an artifact of Tushar's script.
 

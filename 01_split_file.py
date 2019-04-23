@@ -5,7 +5,7 @@ Splits one big file into smaller ones
 Takes a file name as an argument and assumes that there is a
 directory already called 'tweets_split/'
 
-Sample call: python 01_split_file.py hydrated_tweets
+Sample call: python 01_split_file.py tweet_ids/election-tweets_1
 Ethan Roubenoff 4/19
 
 """

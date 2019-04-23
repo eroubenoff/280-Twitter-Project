@@ -11,6 +11,12 @@ wget -ibc urls.txt
 ```
 Which will download all the relevant files. Run Hydrator. It will take weeks. 
 
+#0: Trying something different that might be faster.
+
+- Split up the tweet ID files.
+- Run `02_hydrate_and_store.py` which will read in the tweet IDs, query to see if it is in the database already, then try to retrieve it from twitter and store directly to mongo.
+
+
 # 1: Split into manageable files
 You will need to split the big hydrated tweet files into more memory-manageable sizes.  Use `01_split_file.py` to split each file into subsets of 100,000 tweets each.  For example, a 50 million tweet file will be split into 500 files with unique names.  Below is a sample usage:
 ```
@@ -23,4 +29,18 @@ This requires minimal setup.  [Install Mongodb](https://docs.mongodb.com/manual/
 ```
 python 02_store_to_db.py
 ```
-h/t to Tushar Chandra for this script.
+h/t to Tushar Chandra for this script.  Best to run as `nohup python 02_store_to_db.py &`.
+
+_Note: skip filtering step!_
+
+# 3: Generate user list and hashtag list
+
+Outputs two CSVs: one containing a list of users and how many tweets they tweeted and one containing a list of hashtags and how many times they were used.
+
+```
+python 03_collect_users.py
+```
+
+
+
+
