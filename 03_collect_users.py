@@ -45,6 +45,7 @@ def export_userlist(client, collection_name):
     np.save("hashtags_list", hashtags)
 
 
+    """
     with open("user_list.csv", "w") as outfile:
         writer = csv.writer(outfile)
         for user_id, num_tweets in users.items():
@@ -60,6 +61,7 @@ def export_userlist(client, collection_name):
                 writer.writerow([hashtag, num_tweets])
             except:
                 continue 
+    """
 
     return
 

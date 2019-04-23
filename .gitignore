@@ -19,3 +19,4 @@ tweet_ids/
 tweets_split/
 user_list.csv
 user_list.npy
+00_authorization.py

@@ -1,18 +1,10 @@
-# =========================================
-# 0_authorization.R
-# Sets up authorization 
-# Ethan Roubenoff 4/19
-# =========================================
-library(streamR)
-library(ROAuth)
+"""
+Sets up authorization 
+Ethan Roubenoff 4/19
+"""
 
-requestURL <- "https://api.twitter.com/oauth/request_token"
-accessURL <- "https://api.twitter.com/oauth/access_token"
-authURL <- "https://api.twitter.com/oauth/authorize"
-consumer_key <- "uVYqJJOGLU3Uiiky1M5HMN6jB"
-consumer_secret <- "FCOZHOes4NLj686XZBT6ls8xLT31kt1oG6e8ipNdueKy2i5rw7"
-access_token <- "3002599774-bTEuqbKtzEEPBa4sSM3Z0Mg2EygrirLvY4gXmva"
-access_secret <- "bgKyirOwkqmfRunVbl9WLe9X0dxbONmJA7AcxDuIJrVRF"
-oauthtoken <- list(consumer_key = consumer_key, consumer_secret = consumer_secret, access_token =  access_token, access_token_secret =  access_secret)
+auth = {"client_key" : "8z0Jl8bbhJIMSSE6NcyOwy8k6",
+    "client_secret": "gNm4xeYgHJ0nAD6XklaJ6rDjnRvmMla1YXHh2L31MGhMIiIlhw",
+    "resource_owner_key" : "3002599774-iOrQdomHuyw8RXOPgQUyjQ5DTgH7g8EMUKxeOCo",
+    "resource_owner_secret" : "KPEq2XryRZajW6jwmY6CLU3bxmyXpky4STHPsMvYdszH0"}
 
-setup_twitter_oauth(consumer_key = consumer_key, consumer_secret = consumer_secret, access_token =  access_token, access_secret =  access_secret)

@@ -25,6 +25,7 @@ import requests
 import csv
 import time
 from requests_oauthlib import OAuth1Session
+from 00_authorization import auth
 
 
 def rate_limit(f):
@@ -82,10 +83,10 @@ def _connect():
     """
     logging.info("creating http session")
     return OAuth1Session(
-        client_key = "8z0Jl8bbhJIMSSE6NcyOwy8k6",
-        client_secret = "gNm4xeYgHJ0nAD6XklaJ6rDjnRvmMla1YXHh2L31MGhMIiIlhw",
-        resource_owner_key= "3002599774-iOrQdomHuyw8RXOPgQUyjQ5DTgH7g8EMUKxeOCo",
-        resource_owner_secret= "KPEq2XryRZajW6jwmY6CLU3bxmyXpky4STHPsMvYdszH0")
+        client_key = auth["client_key"],
+        client_secret = auth["client_secret"],
+        resource_owner_key= auth["resource_owner_key"],
+        resource_owner_secret= auth["resource_owner_secret"])
 
 def hydrate(iterator, db_client):
     """
