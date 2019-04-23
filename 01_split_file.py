@@ -23,7 +23,7 @@ def split_tweets(bigfile_str):
             
             # A simple progress bar 
             sys.stdout.write('\r')
-            sys.stdout.write("[%-20s] %d%%" % ('='*(lineno//100000), 5*lineno//100000))
+            sys.stdout.write("[%-20s] %d%%" % ('='*(lineno // 500), 5 * lineno//500))
             sys.stdout.flush()
 
             if lineno % lines_per_file == 0:
