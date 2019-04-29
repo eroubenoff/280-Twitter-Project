@@ -18,6 +18,8 @@ import pymongo
 import time
 import logging
 import h5py
+import sys
+from scipy import sparse
 
 def generate_matrix(data):
     """Get all users and hashtags in collection and export as separate CSVs."""
@@ -48,13 +50,12 @@ def generate_matrix(data):
     
     # Need to convert to list to maintain order.  "id" is always the first column
     users = list(users)
-    hashtags = ['id'] + list(hashtags)
-    out_str("Generated {0} users and {1} hashtags".format(len(users), len(hashtags) - 1))
+    hashtags = list(hashtags)
+    out_str("Generated {0} users and {1} hashtags".format(len(users), len(hashtags) ))
 
-    tf_matrix = np.empty((len(users), len(hashtags)))
+    # tf_matrix = np.empty((len(users), len(hashtags)), dtype = 'u4')
+    tf_matrix = sparse.dok_matrix((len(users), len(hashtags)), dtype = 'u4')
 
-    # Assign users list to first column in matrix 
-    tf_matrix[:,0] = users
     
     # Enumerate the list to a dict of (key, index)
     users = {k: v for v, k in enumerate(users)} 
@@ -79,7 +80,7 @@ def fill_matrix(data, tf_matrix):
             try: 
                 i = users[tweet["user"]["id"]]
                 j = hashtags[entity["text"].lower()]
-                tf_matrix[i][j] += 1
+                tf_matrix[i, j] += 1
                 num_updated += 1
             except Exception as e:
                 failure += 1
@@ -107,30 +108,31 @@ if __name__ == "__main__":
     )
     out_str("---------------------------------------")
     out_str("Initializing matrix creation")
-    limit = 1000
+    limit = 1000000
 
     # Initialize pymongo client 
     client = pymongo.MongoClient("localhost", 27017)
     data = client["twitter"]["tweets"].find({}, {"_id": 0, "user": 1, "entities": 1}, no_cursor_timeout = True).limit(limit)
+
+    # start timing
     start = time.time()
     
-    # Generate empty and assign to tf_matrix
+    # Generate empty matrix and assign to tf_matrix
     tf_matrix =  generate_matrix(data)
     end_1 = time.time()
     out_str("generate_matrix took {0}".format(end_1 - start))
-    
+   
+    # Fill matrix
     data = data.rewind()
     tf_matrix = fill_matrix(data, tf_matrix)
     end_2 = time.time()
-    out_str("fill_matrix took {0}".format(end_2-end_1))
+    out_str("fill_matrix took {0} and matrix size is {1} MB".format(end_2-end_1, 2*tf_matrix.size/(1024**2)))
 
-    # out_str("saving matrix")
-    # with h5py.File('tf_matrix.h5', 'w') as hf:
-        # hf.create_dataset("tf_matrix", data = tf_matrix)
-
-        # To read: 
-        # with h5py.File('tf_matrix.h5', 'r') as hf:
-        # tf_matrix = hf['tf_matrix'][:]
+    # Write out matrix
+    out_str("saving matrix")
+    tf_matrix = sparse.csr_matrix(tf_matrix)
+    sparse.save_npz('tf_sparse.npz', tf_matrix)
+    end_3 = time.time()
+    out_str("Saving sparse matrix took {0} seconds".format(end_3-end_2))
     out_str("Total time: {0} for {1} entries".format(end_2-start, limit))
-    out_str("Matrix size: {} bytes".format(tf_matrix.nbytes))
     out_str("---------------------------------------")
