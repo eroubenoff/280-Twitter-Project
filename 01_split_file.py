@@ -5,7 +5,7 @@ Splits one big file into smaller ones
 Takes a file name as an argument and assumes that there is a
 directory already called 'tweets_split/'
 
-Sample call: python 01_split_file.py tweet_ids/election-tweets_1
+Sample call: python 01_split_file.py election-tweets_1
 Ethan Roubenoff 4/19
 
 """
@@ -23,7 +23,8 @@ def split_tweets(bigfile_str):
             
             # A simple progress bar 
             sys.stdout.write('\r')
-            sys.stdout.write("[%-20s] %d%%" % ('='*(lineno // 500), 5 * lineno//500))
+            # sys.stdout.write("[%-20s] %d%%" % ('='*(lineno // 500), 5 * lineno//500))
+            sys.stdout.write("Writing %s files" % (lineno // 100000))
             sys.stdout.flush()
 
             if lineno % lines_per_file == 0:

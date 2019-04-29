@@ -24,8 +24,9 @@ import logging
 import requests
 import csv
 import time
+import numpy as np
 from requests_oauthlib import OAuth1Session
-from 00_authorization import auth
+from credentials import auth
 
 
 def rate_limit(f):
@@ -125,8 +126,6 @@ def hydrate(iterator, db_client):
 
         # Once there are 100 ids to query:
         if len(ids) == 100:
-            logging.info("hydrating %s ids", len(ids))
-
             # Call post method which will return a post object
             resp = post(url, data={"id": ','.join(ids)})
             # Convert post object to json
@@ -138,11 +137,12 @@ def hydrate(iterator, db_client):
                 tmp = tweets_collection.insert_one(tweet)
 
             # clear list and repeat
+            logging.info("successfully wrote %s tweets into database", len(ids))
             ids = []
 
     # if the iterator finishes and there are still ids in the list, hydrate them.
     if len(ids) > 0:
-        logging.info("hydrating %s ids", len(ids))
+        # logging.info("hydrating %s ids", len(ids))
         resp = post(url, data={"id": ','.join(ids)})
         tweets = resp.json()
         for tweet in tweets:
@@ -169,10 +169,18 @@ def store_tweets(db_client):
     # Read stored tweets and store into database.
     tweet_dir = "./tweets_split/"
 
+    file_index = 0
+
     # For each file in the tweets directory
     for tweet_file in sorted(os.listdir(tweet_dir)):
-        fpath = os.path.join(tweet_dir, tweet_file)
+        # skip the first n files
+        if file_index < 217:
+            logging.info("skipping file %s", str(file_index))
+            file_index += 1
+            continue 
 
+        fpath = os.path.join(tweet_dir, tweet_file)
+        
         with open(fpath) as f:
             csvfile = csv.reader(f)
 
@@ -181,12 +189,12 @@ def store_tweets(db_client):
             hydrate(csvfile, db_client)
 
             logging.info("file %s fully hydrated", str(tweet_file))
-            print("file %s fully hydrated", str(tweet_file))
-        # print("Wrote tweets from {} into database.".format(tweet_file))
+            print("file ", str(tweet_file), "hydarted and written to db")
+        
+        file_index += 1
 
 
 if __name__ == "__main__":
-
     # Configure logging
     logging.basicConfig(
         filename="hydration_log.log",
