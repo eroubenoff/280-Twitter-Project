@@ -91,12 +91,12 @@ def _connect():
 
 def hydrate(iterator, db_client):
     """
-    Pass in an iterator of tweet ids and mongodb database.  
-    Check to see if the tweet has already beenand if need be, query in 
+    Pass in an iterator of tweet ids and mongodb database.
+    Check to see if the tweet has already beenand if need be, query in
     batches of 100.  Checks both the tweets collection and read_ids collection.
 
     Modified from Twarc.
-    """ 
+    """
     # the IDs to query
     ids = []
     # the API URL to pass to post
@@ -112,15 +112,15 @@ def hydrate(iterator, db_client):
         tweet_id = tweet_id[0]  # remove new line if present
 
         # If tweet is already in the "read_ids" collection, skip.  Else, add it.
-        if read_ids.find({'id' : int(tweet_id)}).count() >= 1: 
+        if read_ids.find({'id' : int(tweet_id)}).count() >= 1:
             continue
         else:
             read_ids.insert_one({'id': int(tweet_id)})
 
         # If the tweet is already in database, continue
-        if tweets_collection.find({'id' : int(tweet_id)}).count() >= 1: 
-            continue 
-        
+        if tweets_collection.find({'id' : int(tweet_id)}).count() >= 1:
+            continue
+
         # tweet ID should be queried.  Apeend to list.
         ids.append(tweet_id)
 
@@ -131,7 +131,7 @@ def hydrate(iterator, db_client):
             # Convert post object to json
             tweets = resp.json()
             print("inserting " + str(len(tweets)) + " into database")
-            
+
             # Insert one by one to tweets_collection
             for tweet in tweets:
                 tmp = tweets_collection.insert_one(tweet)
@@ -174,13 +174,13 @@ def store_tweets(db_client):
     # For each file in the tweets directory
     for tweet_file in sorted(os.listdir(tweet_dir)):
         # skip the first n files
-        if file_index < 217:
+        if file_index < 590:
             logging.info("skipping file %s", str(file_index))
             file_index += 1
-            continue 
+            continue
 
         fpath = os.path.join(tweet_dir, tweet_file)
-        
+
         with open(fpath) as f:
             csvfile = csv.reader(f)
 
@@ -190,7 +190,7 @@ def store_tweets(db_client):
 
             logging.info("file %s fully hydrated", str(tweet_file))
             print("file ", str(tweet_file), "hydarted and written to db")
-        
+
         file_index += 1
 
 
@@ -208,4 +208,4 @@ if __name__ == "__main__":
 
     # UNCOMMENT THE BELOW LINE TO RUN THE SCRIPT.
     store_tweets(db_client)
-    
+

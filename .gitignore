@@ -20,3 +20,11 @@ tweets_split/
 user_list.csv
 user_list.npy
 00_authorization.py
+*.log
+*.npz
+
+__pycache__/
+*.pickle
+credentials.py
+files_read
+scratch.py
