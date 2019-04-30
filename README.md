@@ -16,7 +16,7 @@ You will need to split the big tweet id files into more memory-manageable sizes.
 ```
 python 01_split_file.py [filename]
 ```
-for each file.
+for each file.  The output will be in `/tweets_split/`.
 
 # 2: Hydrate the tweets
 Two options: hydrate using [hydrator](https://github.com/DocNow/hydrator) and import to mongoDB manually or do it all in one step (recommended).
@@ -33,14 +33,28 @@ It seems to be better if your `tweets` collection uses zlib compression and (pos
 
 You can hydrate 8,640,000 tweets per day with the standard API, so all of the files will take about a month.
 
-# 3: Generate user list and hashtag list
+# 3: Filter tweets
+Creates two collections in database `tweets`:
 
-Outputs two CSVs: one containing a list of users and how many tweets they tweeted and one containing a list of hashtags and how many times they were used.
+- `tweets_filtered`: Takes tweets that are in english and have text and only saves the tweet id, user id, text, and geography
+- `users`: Saves users who have relevant tweets.
+
+Initially all remaining scripts were written to use collection `tweets` which is large and clunky.  The following will be rewritten to only use the `tweets_filtered` collection.  Runs quickly but best run `nohup`.
+
+In next build, add a collection of `hashtags` to eliminate preprocessing in next step. 
+
+# 4: Generate term frequency matrix
+Generate the term frequency matrix `tf_matrix` that is ultimately fed in to the SVM.  Loops through all tweets (a limit is written in, but that can be eliminated). For each tweet, creates a list of users and hashtags, each with an index.  Then creates a sparse matrix where each row is a user and each column is a hashtag, and the entry is the number of times that user used that hashtag.
+
+The idea is that you can access a `[users, hashtag]` in the form of: `tf_matrix[user[user_id], hashtag["hashtag"]]`.  This is super fast.  Outputs all of them.
 
 ```
 python 03_collect_users.py
 ```
 
+# 5: Annotate a subset
+
+Generates a random sample for user to annotate.  Saves the annotations when done.
 
 
 
