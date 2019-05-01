@@ -16,6 +16,7 @@ This script assumes:
 import pymongo
 import time
 import logging
+import scipy as sp
 from scipy import sparse
 import pickle
 
@@ -37,34 +38,44 @@ def generate_matrix(data):
     out_str("Querying {0} tweets from Mongo".format(limit))
     count = data.count()
 
-    hashtags = set()
-    users = set()
+    hashtags = {}
+    users = {}
 
     for i, tweet in enumerate(data):
         # Add each user to the set of users (will not duplicate)
-        users.add(tweet["user"])
+        try:
+            users[tweet["user"]] += 1
+        except Exception:
+            users[tweet["user"]] = 1
 
         # Add each hashtag to set of hashtags (will not duplicate)
-        for j, entity in enumerate(tweet["hashtags"]):
-            hashtags.add(entity.lower())
+        for entity in tweet["hashtags"]:
+            try:
+                hashtags[entity.lower()] += 1
+            except Exception:
+                hashtags[entity.lower()] = 1
 
         if i % 50000 == 0:
             out_str("Generate Matrix: Processed {0}/{1} tweets; have {2} "
                     "users and {3} hashtags".format(i, count,
                                                     len(users), len(hashtags)))
 
-    # Apparentl #id is used as a hashtag and is creating collissions
-    # with the id column.  For now, just pop it.  Deal with it later:
-    # hashtags.remove("electionday")
-    # hashtags.remove("election2016")
+    # Remove users that only had one tweet and hashtags that were only used
+    # once
+    for x in list(users.keys()):
+        if users[x] == 1:
+            del users[x]
+    for x in list(hashtags.keys()):
+        if hashtags[x] == 1:
+            del hashtags[x]
 
     tf_matrix = sparse.dok_matrix((len(users), len(hashtags)), dtype='u4')
     out_str("Generated {0} users and {1} hashtags".format(len(users),
                                                           len(hashtags)))
 
     # Enumerate the list to a dict of (key, index)
-    users = {k: v for v, k in enumerate(users)}
-    hashtags = {k: v for v, k in enumerate(hashtags)}
+    users = {k: v for v, k in enumerate(users.keys())}
+    hashtags = {k: v for v, k in enumerate(hashtags.keys())}
 
     return(tf_matrix, users, hashtags)
 
@@ -89,16 +100,13 @@ def fill_matrix(data, tf_matrix, users, hashtags):
     failure = 0
 
     for x, tweet in enumerate(data):
-        # Skip tweets that have no text!
-        for y, entity in enumerate(tweet["hashtags"]):
+        for entity in tweet["hashtags"]:
             try:
                 i = users[tweet["user"]]
                 j = hashtags[entity.lower()]
                 tf_matrix[i, j] += 1
-                # print(tf_matrix[i, j])
                 num_updated += 1
             except Exception:
-                # print(tweet)
                 failure += 1
 
         count += 1
@@ -109,6 +117,7 @@ def fill_matrix(data, tf_matrix, users, hashtags):
 
     out_str("Updated {0} tweets and {1} hashtags. "
             "{2} failed.".format(count, num_updated, failure))
+
 
     return(tf_matrix)
 
@@ -127,7 +136,7 @@ if __name__ == "__main__":
     )
     out_str("---------------------------------------")
     out_str("Initializing matrix creation")
-    limit = 1000000
+    limit = 0
 
     # Initialize pymongo client
     client = pymongo.MongoClient("localhost", 27017)
