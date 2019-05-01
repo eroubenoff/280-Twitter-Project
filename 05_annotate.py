@@ -9,6 +9,11 @@ Randomly specifies n users and returns all tweets by each user.  Script will
 then display all tweets on screen for user to enter 'r, l, a' for each user.
 
 Returns a dict of the annotated users and the affiliation.
+
+Saves the annotation to 'training_data/annotated_users_{time.time()}'
+
+The idea is that you can specity a training data to call in SVM, or it will
+just use the most recently created file.
 """
 
 import pymongo
@@ -26,7 +31,7 @@ def annotate_user(client, user):
     print('\n'*3)
 
     # Query for that user id and only return fill that full text
-    data = client.find({'user.id': user}, {"_id": 0, "full_text": 1})
+    data = client.find({'user': user}, {"_id": 0, "full_text": 1})
 
     # Print each tweet text to the console
     for t in data:
@@ -60,7 +65,8 @@ if __name__ == "__main__":
     )
     out_str("---------------------------------------")
     out_str("Annotating at {0}".format(time.localtime()))
-    client = pymongo.MongoClient("localhost", 27017)["twitter"]["tweets"]
+    client = pymongo.MongoClient("localhost",
+                                 27017)["twitter"]["tweets_filtered"]
 
     with open('users.pickle', 'rb') as up:
         users = pickle.load(up)
@@ -78,5 +84,11 @@ if __name__ == "__main__":
     out_str("User entered: ")
     out_str(annotated)
 
-    with open('annotated_users.pickle', 'wb') as up:
+    # Save each annotation as a unique file in './training_data/'
+    try:
+        os.mkdir('training_data')
+    except FileExistsError:
+        pass
+    with open('training_data/annotated_users_{0}.pickle'.format(
+            time.time()), 'wb') as up:
         pickle.dump(annotated, up)
