@@ -53,6 +53,11 @@ def rate_limit(f):
                 logging.info("503 from Twitter API, sleeping %s", seconds)
                 print("Rate limit, sleeping.  Check log.")
                 time.sleep(seconds)
+            elif resp.status_code == 500:
+                seconds = 600
+                logging.info("500 from Twitter API, sleeping {0}".format(
+                    seconds))
+                time.sleep(seconds)
             else:
                 resp.raise_for_status()
     return new_f
@@ -161,7 +166,7 @@ def store_tweets(db_client):
     # For each file in the tweets directory
     for tweet_file in sorted(os.listdir(tweet_dir)):
         # skip the first n files
-        if file_index < 590:
+        if file_index < 675:
             logging.info("skipping file %s", str(file_index))
             file_index += 1
             continue
