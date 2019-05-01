@@ -16,15 +16,12 @@ This script will:
 Script modified from Twarc and Tushar Chandra.
 """
 
-import json
 import os
-import sys
 import pymongo
 import logging
 import requests
 import csv
 import time
-import numpy as np
 from requests_oauthlib import OAuth1Session
 from credentials import auth
 
@@ -60,6 +57,7 @@ def rate_limit(f):
                 resp.raise_for_status()
     return new_f
 
+
 @rate_limit
 def post(*args, **kwargs):
     """
@@ -75,6 +73,7 @@ def post(*args, **kwargs):
         _connect()
         return post(*args, **kwargs)
 
+
 def _connect():
     """
     Creates OAuthLib object that is used for queries.  Assumes that the correct
@@ -84,10 +83,11 @@ def _connect():
     """
     logging.info("creating http session")
     return OAuth1Session(
-        client_key = auth["client_key"],
-        client_secret = auth["client_secret"],
-        resource_owner_key= auth["resource_owner_key"],
-        resource_owner_secret= auth["resource_owner_secret"])
+        client_key=auth["client_key"],
+        client_secret=auth["client_secret"],
+        resource_owner_key=auth["resource_owner_key"],
+        resource_owner_secret=auth["resource_owner_secret"])
+
 
 def hydrate(iterator, db_client):
     """
@@ -97,58 +97,46 @@ def hydrate(iterator, db_client):
 
     Modified from Twarc.
     """
-    # the IDs to query
+
     ids = []
-    # the API URL to pass to post
     url = "https://api.twitter.com/1.1/statuses/lookup.json"
 
-    # tweets_collection is the mongo collection containing the fully hydrated tweets
     tweets_collection = db_client["twitter"]["tweets"]
-    # read_ids is mongo collection containing _just_ the ids it has already queried.
     read_ids = db_client["twitter"]["read_ids"]
 
-    # lookup 100 tweets at a time
     for tweet_id in iterator:
-        tweet_id = tweet_id[0]  # remove new line if present
+        tweet_id = tweet_id[0]
 
-        # If tweet is already in the "read_ids" collection, skip.  Else, add it.
-        if read_ids.find({'id' : int(tweet_id)}).count() >= 1:
+        # If tweet is already in the "read_ids" collection, skip. Else, add it.
+
+        if read_ids.find({'id': int(tweet_id)}).count() >= 1:
             continue
         else:
             read_ids.insert_one({'id': int(tweet_id)})
 
-        # If the tweet is already in database, continue
-        if tweets_collection.find({'id' : int(tweet_id)}).count() >= 1:
+        # If the tweet is already in database, skip
+        if tweets_collection.find({'id': int(tweet_id)}).count() >= 1:
             continue
 
-        # tweet ID should be queried.  Apeend to list.
         ids.append(tweet_id)
-
-        # Once there are 100 ids to query:
         if len(ids) == 100:
-            # Call post method which will return a post object
+            # Call post method which will return a post object with json field
             resp = post(url, data={"id": ','.join(ids)})
-            # Convert post object to json
             tweets = resp.json()
-            print("inserting " + str(len(tweets)) + " into database")
-
-            # Insert one by one to tweets_collection
             for tweet in tweets:
-                tmp = tweets_collection.insert_one(tweet)
+                tweets_collection.insert_one(tweet)
 
-            # clear list and repeat
-            logging.info("successfully wrote %s tweets into database", len(ids))
+            logging.info("successfully wrote %s tweets into database",
+                         len(tweets))
             ids = []
 
-    # if the iterator finishes and there are still ids in the list, hydrate them.
+    # if the iterator finishes and there are still ids in the list
     if len(ids) > 0:
-        # logging.info("hydrating %s ids", len(ids))
         resp = post(url, data={"id": ','.join(ids)})
         tweets = resp.json()
         for tweet in tweets:
-            tmp = tweets_collection.insert_one(tweet)
-        print("inserted " + str(len(tweets)) + " into database")
-        logging.info("successfully wrote %s tweets into database", len(ids))
+            tweets_collection.insert_one(tweet)
+        logging.info("successfully wrote %s tweets into database", len(tweets))
 
 
 def store_tweets(db_client):
@@ -158,8 +146,7 @@ def store_tweets(db_client):
     """
 
     # Create collections needed
-    # On your own time, it is best to convert this to zlib compression by dumping
-    # the database, creating a new collection using zlib, and restoring.
+    # On your own time, it is best to convert this to zlib compression
     if "tweets" not in db_client["twitter"].collection_names():
         db_client["twitter"].crate_collection("tweets")
     # Create a collection of read tweet ids (to avoid querying multiple times)
@@ -183,13 +170,9 @@ def store_tweets(db_client):
 
         with open(fpath) as f:
             csvfile = csv.reader(f)
-
             logging.info("hydrating file %s", str(tweet_file))
-            print("hydrating file %s", str(tweet_file))
             hydrate(csvfile, db_client)
-
             logging.info("file %s fully hydrated", str(tweet_file))
-            print("file ", str(tweet_file), "hydarted and written to db")
 
         file_index += 1
 
@@ -208,4 +191,3 @@ if __name__ == "__main__":
 
     # UNCOMMENT THE BELOW LINE TO RUN THE SCRIPT.
     store_tweets(db_client)
-
