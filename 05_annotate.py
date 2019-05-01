@@ -46,8 +46,8 @@ def annotate_user(client, user, n, u):
     print('\n'*3)
     resp = input("Please enter if user seems l(eft), r(ight),"
                  "or a(mbiguous): \n")
-    if resp not in ["l", "r", "a"]:
-        input("Not a valid entry: only l, r, or a are valid:")
+    while resp not in ["l", "r", "a"]:
+        resp = input("Not a valid entry: only l, r, or a are valid:")
 
     return(resp)
 
