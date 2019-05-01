@@ -1,4 +1,5 @@
 """
+test
 Write list of users who tweeted to a CSV, user_list.csv.
 Also write a list of hashtags and their frequency,
 hashtag_list.csv
@@ -40,18 +41,12 @@ def generate_matrix(data):
     users = set()
 
     for i, tweet in enumerate(data):
-        # Skip tweets that have no entities!
-        if not hasattr(tweet, "entities"):
-            try:
-                data.next()
-            except Exception:
-                break
         # Add each user to the set of users (will not duplicate)
-        users.add(tweet["user"]["id"])
+        users.add(tweet["user"])
 
         # Add each hashtag to set of hashtags (will not duplicate)
-        for j, entity in enumerate(tweet["entities"]["hashtags"]):
-            hashtags.add(entity["text"].lower())
+        for j, entity in enumerate(tweet["hashtags"]):
+            hashtags.add(entity.lower())
 
         if i % 50000 == 0:
             out_str("Generate Matrix: Processed {0}/{1} tweets; have {2} "
@@ -60,8 +55,8 @@ def generate_matrix(data):
 
     # Apparentl #id is used as a hashtag and is creating collissions
     # with the id column.  For now, just pop it.  Deal with it later:
-    hashtags.remove("electionday")
-    hashtags.remove("election2016")
+    # hashtags.remove("electionday")
+    # hashtags.remove("election2016")
 
     tf_matrix = sparse.dok_matrix((len(users), len(hashtags)), dtype='u4')
     out_str("Generated {0} users and {1} hashtags".format(len(users),
@@ -95,18 +90,15 @@ def fill_matrix(data, tf_matrix, users, hashtags):
 
     for x, tweet in enumerate(data):
         # Skip tweets that have no text!
-        if not hasattr(tweet, "entities"):
+        for y, entity in enumerate(tweet["hashtags"]):
             try:
-                data.next()
-            except Exception:
-                break
-        for y, entity in enumerate(tweet["entities"]["hashtags"]):
-            try:
-                i = users[tweet["user"]["id"]]
-                j = hashtags[entity["text"].lower()]
+                i = users[tweet["user"]]
+                j = hashtags[entity.lower()]
                 tf_matrix[i, j] += 1
+                # print(tf_matrix[i, j])
                 num_updated += 1
             except Exception:
+                # print(tweet)
                 failure += 1
 
         count += 1
@@ -135,13 +127,13 @@ if __name__ == "__main__":
     )
     out_str("---------------------------------------")
     out_str("Initializing matrix creation")
-    limit = 10000
+    limit = 100000
 
     # Initialize pymongo client
     client = pymongo.MongoClient("localhost", 27017)
-    data = client["twitter"]["tweets"].find(
-        {"lang": "en"},
-        {"_id": 0, "user": 1, "entities": 1},
+    data = client["twitter"]["tweets_filtered"].find(
+        {},
+        {"_id": 0, "user": 1, "hashtags": 1},
         no_cursor_timeout=True).limit(limit)
 
     # start timing
