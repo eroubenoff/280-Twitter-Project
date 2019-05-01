@@ -24,9 +24,10 @@ import time
 import logging
 
 
-def annotate_user(client, user):
+def annotate_user(client, user, n, u):
     os.system('clear')
     print('\n'*3)
+    print("User {0} of {1}".format(u + 1, n))
     print("Are the following tweets l(eft), r(ight), or a(mbiguous)?")
     print('\n'*3)
 
@@ -72,13 +73,13 @@ if __name__ == "__main__":
         users = pickle.load(up)
 
     # n is the number of users to annotate
-    n = 10
+    n = 100
     users = random.sample(list(users), n)
 
     annotated = {}
 
     for u in users:
-        annotated[u] = annotate_user(client, u)
+        annotated[u] = annotate_user(client, u, n, users.index(u))
         out_str("Annotated user {0} as {1}".format(u, annotated[u]))
     # Save it as a pickle
     out_str("User entered: ")

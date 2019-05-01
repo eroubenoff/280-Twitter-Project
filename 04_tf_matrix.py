@@ -127,7 +127,7 @@ if __name__ == "__main__":
     )
     out_str("---------------------------------------")
     out_str("Initializing matrix creation")
-    limit = 100000
+    limit = 1000000
 
     # Initialize pymongo client
     client = pymongo.MongoClient("localhost", 27017)
