@@ -37,14 +37,14 @@ def filter_tweets(client, limit):
 
     data = client["twitter"]["tweets"].find({}).limit(limit)
 
-    tweets_count = tweets_failure = 0
+    tweets_count = tweets_failure = tweets_already = 0
 
     for i, tweet in enumerate(data):
 
-        # If the tweet has no text or is not in english, skip it
-        if "full_text" not in tweet.keys() or not tweet["lang"] == "en":
+        # If the tweet is not in english, skip it
+        if tweet["lang"] != "en":
+            tweets_failure += 1
             try:
-                tweets_failure += 1
                 data.next()
             except Exception:
                 break
@@ -52,21 +52,16 @@ def filter_tweets(client, limit):
             filtered_tweet = {
                 "_id": tweet["id"],
                 "user": tweet["user"]["id"],
-                "full_text": tweet["full_text"],
+                "full_text": tweet["full_text"] if "full_text" in tweet.keys()
+                else tweet["text"],
                 "hashtags": [],
                 "coordinates": tweet["coordinates"] if tweet[
                     "coordinates"] else None,
                 "place": tweet["place"] if tweet["place"] else None,
             }
-            """
-            user = {
-                "_id": tweet["user"]["id"]
-            }
-            """
             for j, entity in enumerate(tweet["entities"]["hashtags"]):
                 filtered_tweet["hashtags"].append(entity["text"].lower())
-        except Exception as e:
-            out_str(repr(e))
+        except Exception:
             tweets_failure += 1
             data.next()
 
@@ -75,16 +70,8 @@ def filter_tweets(client, limit):
                 filtered_tweet)
             tweets_count += 1
         except pymongo.errors.DuplicateKeyError:
+            tweets_already += 1
             pass
-
-        """
-        try:
-            client["twitter"]["users"].insert_one(
-                user)
-            users_count += 1
-        except pymongo.errors.DuplicateKeyError:
-            pass
-        """
 
         if i % 5000 == 0:
             out_str("Filter Tweets: Processed {0} tweets of {1} ".format(
@@ -92,8 +79,8 @@ def filter_tweets(client, limit):
 
     out_str("-----Insertion Complete-----")
     out_str("{0} tweets attempted.  Found {1} valid tweets and"
-            " {2} tweets failed".format(limit, tweets_count,
-                                        tweets_failure))
+            " {2} tweets failed. {3} tweets were already present".format(
+                limit, tweets_count, tweets_failure, tweets_already))
 
 
 def out_str(s):
@@ -122,10 +109,6 @@ if __name__ == "__main__":
     # Note that these should be uncompressed collections
     if "tweets_filtered" not in client["twitter"].collection_names():
         client["twitter"].create_collection("tweets_filtered")
-    """
-    if "users" not in client["twitter"].collection_names():
-        client["twitter"].create_collection("users")
-    """
 
     # Optional limit for testing purposes
     limit = 0

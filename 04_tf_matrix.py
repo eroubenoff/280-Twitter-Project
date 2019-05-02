@@ -16,7 +16,6 @@ This script assumes:
 import pymongo
 import time
 import logging
-import scipy as sp
 from scipy import sparse
 import pickle
 
@@ -69,7 +68,7 @@ def generate_matrix(data):
         if hashtags[x] == 1:
             del hashtags[x]
 
-    tf_matrix = sparse.dok_matrix((len(users), len(hashtags)), dtype='u4')
+    tf_matrix = sparse.dok_matrix((len(users), len(hashtags)), dtype='u8')
     out_str("Generated {0} users and {1} hashtags".format(len(users),
                                                           len(hashtags)))
 
@@ -117,7 +116,6 @@ def fill_matrix(data, tf_matrix, users, hashtags):
 
     out_str("Updated {0} tweets and {1} hashtags. "
             "{2} failed.".format(count, num_updated, failure))
-
 
     return(tf_matrix)
 

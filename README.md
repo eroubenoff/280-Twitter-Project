@@ -34,27 +34,38 @@ It seems to be better if your `tweets` collection uses zlib compression and (pos
 You can hydrate 8,640,000 tweets per day with the standard API, so all of the files will take about a month.
 
 # 3: Filter tweets
-Creates two collections in database `tweets`:
+```
+python 03_filter_tweets.py
+```
+Creates the following collection in database `tweets`:
 
 - `tweets_filtered`: Takes tweets that are in english and have text and only saves the tweet id, user id, text, and geography
-- `users`: Saves users who have relevant tweets.
 
-Initially all remaining scripts were written to use collection `tweets` which is large and clunky.  The following will be rewritten to only use the `tweets_filtered` collection.  Runs quickly but best run `nohup`.
+All following scripts are written to use `tweets_filtered` instead of `tweets` because it is way faster.
 
-In next build, add a collection of `hashtags` to eliminate preprocessing in next step. 
 
 # 4: Generate term frequency matrix
-Generate the term frequency matrix `tf_matrix` that is ultimately fed in to the SVM.  Loops through all tweets (a limit is written in, but that can be eliminated). For each tweet, creates a list of users and hashtags, each with an index.  Then creates a sparse matrix where each row is a user and each column is a hashtag, and the entry is the number of times that user used that hashtag.
-
-The idea is that you can access a `[users, hashtag]` in the form of: `tf_matrix[user[user_id], hashtag["hashtag"]]`.  This is super fast.  Outputs all of them.
-
 ```
-python 03_collect_users.py
+python 04_tf_matrix.py
 ```
+Generate the term frequency matrix `tf_matrix` that is ultimately fed in to the SVM.  Loops through all tweets (a limit is written in, set `limit = 0` ignore). For each tweet, creates a list of users and hashtags, each with an index.  Then creates a sparse matrix where each row is a user and each column is a hashtag, and the entry is the number of times that user used that hashtag.
+
+The idea is that you can access a `(users, hashtag)` in the form of: `tf_matrix[user[user_id], hashtag["hashtag"]]`.  This is super fast.  
+
+Returns the `tf_matrix` as a `.npz` and `users`, and `hashtags` structures in the `pickle` format.  These are not meant to be human-readable, only to be read by the next script.
+
 
 # 5: Annotate a subset
+```
+python 05_annotate.py
+```
+Generates a random sample for user to annotate.  Saves the annotations when done.  The output is a pickle saved in the folder `training_data` with the current time.  The idea is that the next script (`06_SVM`) will always use the most recently annotated data unless specified otherwise.  There are a few redundancy measures: the console will output results, save to the specified pickle, and also save the output to the log file.  If something goes horribly wrong the annotations are probably not lost.
 
-Generates a random sample for user to annotate.  Saves the annotations when done.
+# 6: SVM
+```
+python 06_SVM.py
+```
+Specifies the annotated users as the training data for the model.  Returns the fitted model.
 
 
 
