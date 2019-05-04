@@ -24,6 +24,7 @@ import csv
 import time
 from requests_oauthlib import OAuth1Session
 from credentials import auth
+from error_email import email_dec
 
 
 def rate_limit(f):
@@ -94,6 +95,7 @@ def _connect():
         resource_owner_secret=auth["resource_owner_secret"])
 
 
+@email_dec
 def hydrate(iterator, db_client):
     """
     Pass in an iterator of tweet ids and mongodb database.
@@ -108,7 +110,7 @@ def hydrate(iterator, db_client):
 
     tweets_collection = db_client["twitter"]["tweets"]
     read_ids = db_client["twitter"]["read_ids"]
-
+    count = 0
     for tweet_id in iterator:
         tweet_id = tweet_id[0]
 
@@ -130,10 +132,14 @@ def hydrate(iterator, db_client):
             tweets = resp.json()
             for tweet in tweets:
                 tweets_collection.insert_one(tweet)
+            count += len(tweets)
 
-            logging.info("successfully wrote %s tweets into database",
-                         len(tweets))
             ids = []
+
+        if count % 100000 == 0:
+            logging.info("successfully wrote %s tweets into database",
+                         count)
+            count = 0
 
     # if the iterator finishes and there are still ids in the list
     if len(ids) > 0:

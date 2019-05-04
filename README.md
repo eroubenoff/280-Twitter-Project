@@ -54,6 +54,8 @@ The idea is that you can access a `(users, hashtag)` in the form of: `tf_matrix[
 
 Returns the `tf_matrix` as a `.npz` and `users`, and `hashtags` structures in the `pickle` format.  These are not meant to be human-readable, only to be read by the next script.
 
+Takes about 10 minutes to do 11 million tweetds.
+
 
 # 5: Annotate a subset
 ```

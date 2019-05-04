@@ -14,14 +14,13 @@ from time import sleep
 import sys
 
 def split_tweets(bigfile_str):
-    # Create individual files of 100,000 tweets each 
+    # Create individual files of 100,000 tweets each
     lines_per_file = 100000
     smallfile = None
 
     with open(bigfile_str) as bigfile:
         for lineno, line in enumerate(bigfile):
-            
-            # A simple progress bar 
+            # A simple progress bar
             sys.stdout.write('\r')
             # sys.stdout.write("[%-20s] %d%%" % ('='*(lineno // 500), 5 * lineno//500))
             sys.stdout.write("Writing %s files" % (lineno // 100000))
@@ -37,7 +36,7 @@ def split_tweets(bigfile_str):
             smallfile.close()
 
 if __name__ == "__main__" :
-    bigfile = sys.argv[1] 
+    bigfile = sys.argv[1]
 
     split_tweets(bigfile)
 

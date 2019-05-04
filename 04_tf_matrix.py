@@ -54,7 +54,7 @@ def generate_matrix(data):
             except Exception:
                 hashtags[entity.lower()] = 1
 
-        if i % 50000 == 0:
+        if i % 1000000 == 0:
             out_str("Generate Matrix: Processed {0}/{1} tweets; have {2} "
                     "users and {3} hashtags".format(i, count,
                                                     len(users), len(hashtags)))
@@ -110,7 +110,7 @@ def fill_matrix(data, tf_matrix, users, hashtags):
 
         count += 1
 
-        if count % 50000 == 0:
+        if count % 1000000== 0:
             out_str("Fill Matrix: Processed {0} tweets; updated {1} "
                     "hashtags".format(count, num_updated))
 

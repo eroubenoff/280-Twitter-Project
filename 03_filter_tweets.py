@@ -73,7 +73,7 @@ def filter_tweets(client, limit):
             tweets_already += 1
             pass
 
-        if i % 5000 == 0:
+        if i % 1000000== 0:
             out_str("Filter Tweets: Processed {0} tweets of {1} ".format(
                 i, limit))
 
