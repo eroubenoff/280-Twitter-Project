@@ -30,52 +30,80 @@ Note that this script _does not_ delete tweets from the unfiltered
 """
 
 import pymongo
+from pymongo.errors import BulkWriteError
 import logging
+from error_email import email_dec
 
 
+class Tweet:
+    def __init__(self, tweet):
+        self._id = tweet["id"]
+        self.user = tweet["user"]["id"]
+        self.full_text = tweet["full_text"] if "full_text" in tweet.keys() else tweet["text"]
+        self.hashtags = []
+        self.coordinates = tweet["coordinates"]
+        self.place = tweet["place"]
+
+        for j, entity in enumerate(tweet["entities"]["hashtags"]):
+            self.hashtags.append(entity["text"].lower())
+
+
+@profile
+def insert(client, bulk_list, tweets_already, tweets_count):
+    ret = {"inserted_ids": []}
+    try:
+        tmp = client["twitter"]["tweets_filtered"].insert_many(
+            bulk_list, ordered=False)
+        print(repr(tmp))
+        ret["inserted_ids"] = tmp.inserted_ids
+    except BulkWriteError:
+        pass
+    except Exception as e:
+        out_str(e)
+
+    print(repr(ret))
+    tweets_count += len(ret["inserted_ids"])
+    tweets_already += (len(bulk_list) - len(ret["inserted_ids"]))
+    bulk_list = []
+
+    return(bulk_list, tweets_already, tweets_count)
+
+
+# @email_dec
+@profile
 def filter_tweets(client, limit):
 
     data = client["twitter"]["tweets"].find({}).limit(limit)
 
     tweets_count = tweets_failure = tweets_already = 0
 
+    bulk_list = []
+
     for i, tweet in enumerate(data):
 
         # If the tweet is not in english, skip it
         if tweet["lang"] != "en":
             tweets_failure += 1
-            try:
-                data.next()
-            except Exception:
-                break
+            continue
+
         try:
-            filtered_tweet = {
-                "_id": tweet["id"],
-                "user": tweet["user"]["id"],
-                "full_text": tweet["full_text"] if "full_text" in tweet.keys()
-                else tweet["text"],
-                "hashtags": [],
-                "coordinates": tweet["coordinates"] if tweet[
-                    "coordinates"] else None,
-                "place": tweet["place"] if tweet["place"] else None,
-            }
-            for j, entity in enumerate(tweet["entities"]["hashtags"]):
-                filtered_tweet["hashtags"].append(entity["text"].lower())
+            filtered_tweet = Tweet(tweet)
         except Exception:
             tweets_failure += 1
-            data.next()
+            continue
 
-        try:
-            client["twitter"]["tweets_filtered"].insert_one(
-                filtered_tweet)
-            tweets_count += 1
-        except pymongo.errors.DuplicateKeyError:
-            tweets_already += 1
-            pass
+        bulk_list.append(filtered_tweet.__dict__)
 
-        if i % 1000000== 0:
-            out_str("Filter Tweets: Processed {0} tweets of {1} ".format(
-                i, limit))
+        if len(bulk_list) == 100000:
+            bulk_list, tweets_already, tweets_count = insert(
+                client, bulk_list, tweets_already, tweets_count)
+            out_str("{0} tweets attempted.  Inserted {1} valid tweets and"
+                    " {2} tweets failed. {3} tweets were already present".format(
+                        i, tweets_count, tweets_failure, tweets_already))
+
+    # Clean up any remaining ones
+    bulk_list, tweets_already, tweets_count = insert(
+        client, bulk_list, tweets_already, tweets_count)
 
     out_str("-----Insertion Complete-----")
     out_str("{0} tweets attempted.  Found {1} valid tweets and"
@@ -109,10 +137,10 @@ if __name__ == "__main__":
     # Note that these should be uncompressed collections
     if "tweets_filtered" not in client["twitter"].collection_names():
         client["twitter"].create_collection("tweets_filtered")
+        client["twitter"]["tweets_filtered"].create_index("user")
 
     # Optional limit for testing purposes
-    limit = 0
-
+    limit = 5000000
     if limit == 0:
         limit = client["twitter"]["tweets"].count()
 
