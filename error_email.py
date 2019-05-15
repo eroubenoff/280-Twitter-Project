@@ -25,13 +25,11 @@ def send_error_email(e):
     s.quit()
 
 
-def error_email(func):
+def email_dec(func):
     def func_wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except Exception as e:
+        except (Exception, KeyboardInterrupt) as e:
             send_error_email(e)
             return(e)
     return func_wrapper
-
-
