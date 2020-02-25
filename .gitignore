@@ -28,3 +28,5 @@ __pycache__/
 credentials.py
 files_read
 scratch.py
+.Rproj.user
+pw.txt

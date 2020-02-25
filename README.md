@@ -1,4 +1,4 @@
-# Twitter Project
+ Twitter Project
 ## Ethan Roubenoff
 ## Started April 2019
 
@@ -70,4 +70,7 @@ python 06_SVM.py
 Specifies the annotated users as the training data for the model.  Returns the fitted model.
 
 
-
+_NB_: To archive the tweets, run
+```
+mongodump --db twitter --gzip --archive=./dump/archive_name
+```

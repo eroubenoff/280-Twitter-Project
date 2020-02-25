@@ -116,7 +116,7 @@ if __name__ == "__main__":
         client["twitter"]["tweets_filtered"].create_index("user")
 
     # Optional limit for testing purposes
-    limit = 1000000
+    limit =0
     if limit == 0:
         limit = client["twitter"]["tweets"].count()
 
