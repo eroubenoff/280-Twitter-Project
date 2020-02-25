@@ -31,3 +31,4 @@ scratch.py
 .Rproj.user
 pw.txt
 TOPOSTGRES_tweets_filtered.json
+df_centroids.RData
